@@ -3,9 +3,9 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION = 'us-east-1'
+        AWS_DEFAULT_REGION = "us-east-1"
     }
-    stages{
+    stages {
         stage('Checkout SCM'){
             steps{
                 script{
@@ -13,20 +13,20 @@ pipeline {
                 }
             }
         }
-         stage('Initializing Terraform'){
+        stage('Initializing Terraform'){
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform init'
+                        sh 'terraform init -reconfigure -force-copy'
                     }
                 }
             }
         }
-        stage('Formating terraform code'){
+        stage('Formatting Terraform Code'){
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform fmt'
+                        sh 'terraform fmt'
                     }
                 }
             }
@@ -35,40 +35,40 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform validate'
+                        sh 'terraform validate'
                     }
                 }
             }
         }
-        stage('Previewing the infrastructure'){
+        stage('Previewing the Infra using Terraform'){
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform plan'
+                        sh 'terraform plan -var-file="variables.tfvars"'
                     }
-                    input(message: "Are you sure to proceed?", ok: "proceed")
+                    input(message: "Are you sure to proceed?", ok: "Proceed")
                 }
             }
         }
-        stage('Creating/Destroying an EKS cluster'){
+        stage('Creating/Destroying an EKS Cluster'){
             steps{
                 script{
-                    dir('terraform'){
-                         sh 'terraform $action --auto-approve'
+                    dir('terraform') {
+                        sh 'terraform apply -var-file="variables.tfvars" --auto-approve'
                     }
                 }
             }
         }
-        stage("Deploying Nginx"){
+        /*stage('Deploying Nginx Application') {
             steps{
                 script{
-                    dir('k8s'){
+                    dir('Jenkins') {
                         sh 'aws eks update-kubeconfig --name my-eks-cluster'
-                        sh 'kubectl apply -f deployment.yml'
-                        sh 'kubectl apply -f service.yml'
+                        sh 'kubectl apply -f deployment.yaml'
+                        sh 'kubectl apply -f service.yaml'
                     }
                 }
             }
-        }
+        }*/
     }
 }
